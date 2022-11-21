@@ -1,0 +1,13 @@
+FROM node:19.0-alpine
+
+USER node
+
+WORKDIR /app
+
+COPY ./enrtypoint.sh .
+
+RUN chmod +x ./enrtypoint.sh
+
+COPY . ./app
+
+ENTRYPOINT [ "./enrtypoint.sh" ]
