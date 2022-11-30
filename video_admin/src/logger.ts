@@ -20,9 +20,11 @@ class Logger {
       Logger.logger = winston.createLogger({
         level: 'info',
         format: winston.format.json(),
-        defaultMeta: { service: 'user-service' },
+        defaultMeta: { service: 'video_admin' },
         transports: [
-          new winston.transports.Console()
+          new winston.transports.Console(),
+          new winston.transports.File({ filename: 'error.log', level: 'error' }),
+          new winston.transports.File({ filename: 'log.log', level: 'info' }),
         ],
       });
     }

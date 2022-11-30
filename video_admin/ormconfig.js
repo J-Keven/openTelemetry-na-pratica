@@ -6,10 +6,10 @@ module.exports = {
   database: process.env.POSTGRES_DB || "subscription",
   username: process.env.POSTGRES_USERNAME || "postgres",
   password: process.env.POSTGRES_PASSWORD || "docker",
-  entities: ["./src/application/**/infra/repository/typeorm/*.model.ts"],
-  migrations: ["./src/infra/database/typeorm/migrations/*.ts"],
+  entities: ["./src/typeorm/*.model.ts"],
+  migrations: ["./src/typeorm/migrations/*.ts"],
   cli: {
-    migrationsDir: "./src/infra/database/typeorm/migrations/",
+    migrationsDir: "./src/typeorm/migrations/",
   },
   namingStrategy: new SnakeNamingStrategy(),
 }
