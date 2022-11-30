@@ -37,7 +37,7 @@ const nodeAutoInstrumentations = getNodeAutoInstrumentations({
 });
 
 // const jaegerExporter = new JaegerExporter({
-//   host: 'jeager',
+//   host: 'jeager',z
 // });
 
 // const metricReader = metrics.;
