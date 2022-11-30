@@ -5,7 +5,7 @@ export default class VideoRepository {
   private videoRepository: Repository<Video>;
 
   constructor() {
-    this.videoRepository = new Repository(Video, "video");
+    this.videoRepository = Video();
   }
 
   public async createVideo(video: Video): Promise<Video> {

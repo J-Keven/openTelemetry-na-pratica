@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.34.0",
+    "@opentelemetry/semantic-conventions": "^1.8.0"
+  }
+}
