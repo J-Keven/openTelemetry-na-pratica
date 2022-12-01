@@ -1,9 +1,5 @@
 import 'dotenv/config';
-import Instrumentation from './instrumentation';
-import logger from './logger';
-
-const instrumentation = Instrumentation.build();
-instrumentation.init(logger.logger);
+import './instrumentation';
 
 import express from 'express';
 import appRoutes from './routes';

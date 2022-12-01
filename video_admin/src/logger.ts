@@ -11,7 +11,7 @@ class Logger {
     Logger.logger.info(message);
   }
 
-  static error(message: string, error: Error) {
+  static error(message: string, error: any) {
     Logger.logger.error(message, error);
   }
 
