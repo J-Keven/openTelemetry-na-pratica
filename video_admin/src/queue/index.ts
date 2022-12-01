@@ -1,6 +1,6 @@
 
 import rabbitmq from "amqplib";
-
+import logger from "../logger"
 import QueueInterface, { IEventData } from "./model";
 
 export default class Queue implements QueueInterface {
@@ -22,7 +22,7 @@ export default class Queue implements QueueInterface {
   public async connect(): Promise<void> {
     this._connection = await rabbitmq.connect(this._url);
     this._channel = await this._connection.createChannel();
-    console.log("Connected to RabbitMQ");
+    logger.info("Connected to RabbitMQ");
   }
 
   public get connection(): rabbitmq.Connection | undefined {
@@ -38,7 +38,7 @@ export default class Queue implements QueueInterface {
         })
       );
     } else {
-      console.log(`No events to notify for ${event}`);
+      logger.info(`No events to notify for ${event}`);
     }
   }
 
@@ -48,40 +48,16 @@ export default class Queue implements QueueInterface {
     routingKey: string,
     retries?: number
   ): Promise<boolean> {
-    const retriesParse = retries || 1;
-    let published = false;
-
-    try {
-      published = this._channel.publish(
-        exchange,
-        routingKey,
-        Buffer.from(message),
-        {
-          persistent: true,
-        }
-      );
-      console.log(`Notified ${message} to ${routingKey}`);
-    } catch (err: any) {
-      const errors = ["Connection closing", "Channel closing"];
-      if (retriesParse < 2 && errors.includes(err.message as string)) {
-        this._connection = undefined;
-        await this.connect();
-
-        published = await this.notify(
-          message,
-          exchange,
-          routingKey,
-          retriesParse + 1
-        );
-      } else {
-        console.error(
-          `Error on emitter email recovery event. Error ${JSON.stringify(err)}`
-        );
-        throw err;
+    const published = this._channel.publish(
+      exchange,
+      routingKey,
+      Buffer.from(message),
+      {
+        persistent: true,
       }
-    }
+    );
 
-    return published;
+    return published
   }
 
   public async consumer(

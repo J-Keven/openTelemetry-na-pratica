@@ -1,15 +1,15 @@
 import 'dotenv/config';
 import './instrumentation';
+import Database from './database';
+import app from './express';
+import logger from './logger';
 
-import express from 'express';
-import appRoutes from './routes';
-import cors from "cors";
+(async () => {
+  await Database.connect();
+  logger.info('Database connected');
+  app.listen(3333, () => {
+    logger.info(`Server started on port ${3333}`)
+  });
+})();
 
-const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(appRoutes);
-
-app.listen(3333, () => console.log('Server is running!'));
