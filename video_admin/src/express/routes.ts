@@ -5,24 +5,24 @@ import axios from "axios";
 import Rabbitmq from "../queue";
 const appRoutes = Router();
 
-const ingressMiddleware = async (req, res, next) => {
-  logger.info(
-    `handled ${req.method} ${req.path}. body ${JSON.stringify(req.body)}`
-  );
-  return next()
-};
+function parseAllMovies(movies) {
+  return new Promise(resolve => setTimeout(resolve, 2000));
+}
 
-appRoutes.post("/courses", ingressMiddleware, (req, res) => {
+appRoutes.post("/courses", (req, res) => {
   const course = {};
   return res.status(201).json(course);
 });
 
-appRoutes.get("/movies", ingressMiddleware, async (req, res) => {
+appRoutes.get("/test", async (req, res) => {
+  const span = req.span;
   const movieRepository = new MovieRepository();
 
   const movies = await movieRepository.findAll();
 
   const { data } = await axios.get("https://api.chucknorris.io/jokes/random");
+
+  await parseAllMovies(data);
 
   const rabbitmq = new Rabbitmq('amqp://rabbitmq:rabbitmq@rabbitmq:5672');
   await rabbitmq.connect();
@@ -31,8 +31,7 @@ appRoutes.get("/movies", ingressMiddleware, async (req, res) => {
     message: "Queroooo cafééééééééé, éééééééeéé"
   }), 'amq.direct', 'movies');
 
-
-  return res.status(500).json();
+  return res.status(200).json(data);
 });
 
 export default appRoutes;

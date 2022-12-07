@@ -1,6 +1,5 @@
-import process from 'process';
-import { NodeSDK, resources, tracing } from "@opentelemetry/sdk-node";
-
+import { NodeSDK, resources, metrics } from "@opentelemetry/sdk-node";
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { ExpressInstrumentationConfig, ExpressLayerType } from "@opentelemetry/instrumentation-express";
@@ -9,10 +8,17 @@ import { PgInstrumentationConfig } from "@opentelemetry/instrumentation-pg";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 
+const metric = new metrics.MeterProvider()
 const expressInstrumentationConfig: ExpressInstrumentationConfig = {
   enabled: true,
-  ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.ROUTER, ExpressLayerType.REQUEST_HANDLER],
+  ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.ROUTER],
   ignoreLayers: ['cors'],
+  requestHook: (span, req) => {
+
+    span.setAttribute('http.headers', JSON.stringify(req.request.headers));
+    span.setAttribute('http.body', JSON.stringify(req.request.body));
+    req.request.span = span;
+  }
 };
 
 const amqplibInstrumentationConfig: AmqplibInstrumentationConfig = {
@@ -30,7 +36,6 @@ const amqplibInstrumentationConfig: AmqplibInstrumentationConfig = {
 
 const pgInstrumentationConfig: PgInstrumentationConfig = {
   enabled: true,
-
   responseHook: (span, res) => {
     span.setAttribute('db.command', res.data.command);
     span.setAttribute('db.response', JSON.stringify(res.data.rows));
@@ -69,11 +74,13 @@ const nodeAutoInstrumentations = getNodeAutoInstrumentations({
   },
 });
 
-const otlpExporter = new OTLPTraceExporter(
-  {
-    hostname: 'collector',
-  }
-);
+const otlpExporter = new OTLPTraceExporter({
+  hostname: 'collector',
+});
+
+const meticExporter = new OTLPMetricExporter({
+  hostname: 'collector',
+})
 
 const opentelemetrySdk = new NodeSDK({
   traceExporter: otlpExporter,
