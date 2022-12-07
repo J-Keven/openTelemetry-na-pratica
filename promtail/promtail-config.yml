@@ -15,4 +15,4 @@ scrape_configs:
           - loki
         labels:
           job: varlogs
-          __path__: /opt/nginx_access.log
+          __path__: /temp/logs/*.log

@@ -69,7 +69,7 @@ services:
     volumes:
       - ./collector-config.yaml:/conf/collector-config.yaml
     ports:
-      - "9464:9464"
+      # - "9464:9464"
       - "4317:4317"
       - "4318:4318"
     depends_on:
@@ -83,30 +83,22 @@ services:
   loki:
     image: grafana/loki:2.3.0
     volumes:
-      - /opt/loki/config/loki-config.yml:/etc/loki/loki-config.yml
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yml
-    networks:
-      - loki
 
   promtail:
     image: grafana/promtail:2.3.0
     volumes:
-      - ./loki/promtail-config.yml:/etc/promtail/promtail-config.yml
-      - /opt/loki/logs/nginx_access.log:/opt/nginx_access.log
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yml
+      - ./video_admin/logs:/temp/logs/
     command: -config.file=/etc/promtail/promtail-config.yml
-    networks:
-      - loki
 
   grafana:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
-    networks:
-      - loki
-
-  # Prometheus
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
@@ -114,3 +106,4 @@ services:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+      - 9464:9464
