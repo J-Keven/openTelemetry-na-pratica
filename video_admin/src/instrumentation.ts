@@ -1,20 +1,31 @@
 import { NodeSDK, resources, metrics } from "@opentelemetry/sdk-node";
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { ExpressInstrumentationConfig, ExpressLayerType } from "@opentelemetry/instrumentation-express";
 import { AmqplibInstrumentationConfig } from "@opentelemetry/instrumentation-amqplib";
 import { PgInstrumentationConfig } from "@opentelemetry/instrumentation-pg";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 
-const metric = new metrics.MeterProvider()
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+
+
+const meticsProvider = new metrics.PeriodicExportingMetricReader({
+  exporter: new OTLPMetricExporter({
+    hostname: 'collector',
+  }),
+  exportIntervalMillis: 1000,
+  exportTimeoutMillis: 1000,
+})
+
+// const aggregation = new metrics.Aggregation({})
+
 const expressInstrumentationConfig: ExpressInstrumentationConfig = {
   enabled: true,
   ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.ROUTER],
   ignoreLayers: ['cors'],
   requestHook: (span, req) => {
-
+    metrics.Aggregation
     span.setAttribute('http.headers', JSON.stringify(req.request.headers));
     span.setAttribute('http.body', JSON.stringify(req.request.body));
     req.request.span = span;
@@ -45,7 +56,7 @@ const pgInstrumentationConfig: PgInstrumentationConfig = {
 
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 
-const nodeAutoInstrumentations = getNodeAutoInstrumentations({
+const instrumentations = getNodeAutoInstrumentations({
   "@opentelemetry/instrumentation-express": expressInstrumentationConfig,
   "@opentelemetry/instrumentation-amqplib": amqplibInstrumentationConfig,
   "@opentelemetry/instrumentation-generic-pool": {
@@ -74,20 +85,19 @@ const nodeAutoInstrumentations = getNodeAutoInstrumentations({
   },
 });
 
-const otlpExporter = new OTLPTraceExporter({
+
+
+const tracingExporter = new OTLPTraceExporter({
   hostname: 'collector',
 });
 
-const meticExporter = new OTLPMetricExporter({
-  hostname: 'collector',
-})
-
 const opentelemetrySdk = new NodeSDK({
-  traceExporter: otlpExporter,
+  traceExporter: tracingExporter,
+  metricReader: meticsProvider,
   resource: new resources.Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: 'video_admin',
   }),
-  instrumentations: [nodeAutoInstrumentations],
+  instrumentations: [instrumentations],
 });
 
 opentelemetrySdk.start();

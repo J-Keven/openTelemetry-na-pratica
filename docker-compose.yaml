@@ -69,7 +69,7 @@ services:
     volumes:
       - ./collector-config.yaml:/conf/collector-config.yaml
     ports:
-      # - "9464:9464"
+      - "9464:9464"
       - "4317:4317"
       - "4318:4318"
     depends_on:
@@ -87,18 +87,18 @@ services:
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yml
-
-  promtail:
-    image: grafana/promtail:2.3.0
-    volumes:
-      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yml
-      - ./video_admin/logs:/temp/logs/
-    command: -config.file=/etc/promtail/promtail-config.yml
-
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    ports:
+      - 9187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:docker@postgres:5432/postgres?sslmode=disable"
   grafana:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
+    # volumes:
+    #   - ./grafana-config:/var/lib/grafana
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
@@ -106,4 +106,4 @@ services:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
-      - 9464:9464
+      # - 9464:9464
